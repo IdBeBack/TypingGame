@@ -29,4 +29,13 @@ namespace UnityHelper
     }
 
     #endregion
+
+    #region Classes
+
+    public static class RandomHelper
+    {
+        public static GameObject RandomPrefab(this GameObject[] prefabs) => prefabs[UnityEngine.Random.Range(0, prefabs.Length)];
+    }
+
+    #endregion
 }

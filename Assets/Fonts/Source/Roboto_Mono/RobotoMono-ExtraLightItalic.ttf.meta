@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 83962ee6251a7b441af46c4396313eb7
+guid: b3592f2fd581f584bbc54e238aaf7725
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -11,9 +11,10 @@ TrueTypeFontImporter:
   fontNames:
   - Roboto Mono
   fallbackFontReferences:
-  - {fileID: 12800000, guid: d1227da86db12f845b28c136e85dc238, type: 3}
-  - {fileID: 12800000, guid: 53a1eb463cd3b5b4c8aa8d2ed142c982, type: 3}
-  - {fileID: 12800000, guid: 410d3e5757da0a6448fbe4334737c503, type: 3}
+  - {fileID: 12800000, guid: 10fe26f151376204dbe26f58b98f231f, type: 3}
+  - {fileID: 12800000, guid: 326054f57387d35479908771d98d6d1a, type: 3}
+  - {fileID: 12800000, guid: 232d1d01979ff514cb45a2e251646288, type: 3}
+  - {fileID: 12800000, guid: d0b48119140fbf4468adaa2037312aef, type: 3}
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1

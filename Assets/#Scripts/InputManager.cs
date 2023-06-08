@@ -37,20 +37,13 @@ public class InputManager : MonoBehaviour
         typingField.ActivateInputField(); // activate InputField from the start
 
         inputText = GenerateText();
+
+        ChangeText();
     }
 
     private void Update()
     {
-        ChangeText();
-
-        print($"caretPos: {caretPos}; typingField.caretPosition: {typingField.caretPosition}");
-
-        if (Input.GetKeyDown(KeyCode.Backspace))
-        {
-            print("backspace");
-
-            caretPos += 1;
-        }
+        typingField.caretPosition = caretPos;
     }
 
     private char ValidateInput(string text, int index, char c)
@@ -86,7 +79,6 @@ public class InputManager : MonoBehaviour
 
     private void ChangeText()
     {
-        typingField.caretPosition = caretPos;
         typingField.text = string.Concat(inputText.Select(w => w.parsed));
     }
 }
