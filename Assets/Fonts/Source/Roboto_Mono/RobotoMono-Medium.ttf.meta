@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 10fe26f151376204dbe26f58b98f231f
+guid: dc6f2e33e5e0e804e953573afbc13e34
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -10,7 +10,19 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - Roboto Mono
-  fallbackFontReferences: []
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 319d69e6ce5a23b41a0ce46972382679, type: 3}
+  - {fileID: 12800000, guid: 86c020be635e9c84d9bda2936bcdb731, type: 3}
+  - {fileID: 12800000, guid: 0c1e4409471d83b4bb5811e93b8b0f87, type: 3}
+  - {fileID: 12800000, guid: 98a8bfb9be393d84198b0f35d28a1f8d, type: 3}
+  - {fileID: 12800000, guid: 292096b87d345b94ebea08ace1fc528d, type: 3}
+  - {fileID: 12800000, guid: a82b1dc5e6036654b9655ed5f8781be4, type: 3}
+  - {fileID: 12800000, guid: fb411a5c7b60e224289522ed7fee8689, type: 3}
+  - {fileID: 12800000, guid: 96f305a889f860b478b943e5a2e94534, type: 3}
+  - {fileID: 12800000, guid: 69684d4563a1bf34bb98d1ce60c94b36, type: 3}
+  - {fileID: 12800000, guid: 17b681cc9845c17438211f142e975708, type: 3}
+  - {fileID: 12800000, guid: f6b3b72bc1c421342b7bc663cde351c4, type: 3}
+  - {fileID: 12800000, guid: 15f38ef77bd54ca4dbaf5ec1e5cc5442, type: 3}
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1

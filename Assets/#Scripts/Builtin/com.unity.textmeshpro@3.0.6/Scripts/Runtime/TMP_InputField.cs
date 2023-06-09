@@ -1,6 +1,6 @@
 ﻿//#define TMP_DEBUG_MODE
 
-// changed by IDBB v1
+// changed by IDBB
 
 using System;
 using System.Collections;
@@ -1918,10 +1918,9 @@ namespace TMPro
                 case KeyCode.Backspace:
                     {
                         // Backspace();
-                        // MoveLeft(shift, ctrl);
                         return EditState.Continue;
                     }
-                    
+
                 case KeyCode.Delete:
                     {
                         // DeleteKey();
@@ -1930,13 +1929,13 @@ namespace TMPro
 
                 case KeyCode.Home:
                     {
-                        MoveToStartOfLine(shift, ctrl);
+                        // MoveToStartOfLine(shift, ctrl);
                         return EditState.Continue;
                     }
 
                 case KeyCode.End:
                     {
-                        MoveToEndOfLine(shift, ctrl);
+                        // MoveToEndOfLine(shift, ctrl);
                         return EditState.Continue;
                     }
 
@@ -1945,7 +1944,7 @@ namespace TMPro
                     {
                         if (ctrlOnly)
                         {
-                            SelectAll();
+                            // SelectAll();
                             return EditState.Continue;
                         }
                         break;
@@ -1977,7 +1976,7 @@ namespace TMPro
                     }*/
 
                 // Cut
-                case KeyCode.X:
+                /*case KeyCode.X:
                     {
                         if (ctrlOnly)
                         {
@@ -1991,41 +1990,41 @@ namespace TMPro
                             return EditState.Continue;
                         }
                         break;
-                    }
+                    }*/
 
                 case KeyCode.LeftArrow:
                     {
-                        MoveLeft(shift, ctrl);
+                        // MoveLeft(shift, ctrl);
                         return EditState.Continue;
                     }
 
                 case KeyCode.RightArrow:
                     {
-                        MoveRight(shift, ctrl);
+                        // MoveRight(shift, ctrl);
                         return EditState.Continue;
                     }
 
                 case KeyCode.UpArrow:
                     {
-                        MoveUp(shift);
+                        // MoveUp(shift);
                         return EditState.Continue;
                     }
 
                 case KeyCode.DownArrow:
                     {
-                        MoveDown(shift);
+                        // MoveDown(shift);
                         return EditState.Continue;
                     }
 
                 case KeyCode.PageUp:
                     {
-                        MovePageUp(shift);
+                        // MovePageUp(shift);
                         return EditState.Continue;
                     }
 
                 case KeyCode.PageDown:
                     {
-                        MovePageDown(shift);
+                        // MovePageDown(shift);
                         return EditState.Continue;
                     }
 
@@ -2041,12 +2040,12 @@ namespace TMPro
                         break;
                     }
 
-                case KeyCode.Escape:
+                /*case KeyCode.Escape:
                     {
                         m_ReleaseSelection = true;
                         m_WasCanceled = true;
                         return EditState.Finish;
-                    }
+                    }*/
             }
 
             char c = evt.character;

@@ -22,8 +22,8 @@ public class InputManager : MonoBehaviour
 
     private readonly int maxExtras = 20;
 
-    private readonly float backspaceHoldDelay = .4f;
-    private readonly float backspaceHoldInterval = .02f;
+    private readonly WaitForSeconds backspaceHoldDelay = new WaitForSeconds(.4f);
+    private readonly WaitForSeconds backspaceHoldInterval = new WaitForSeconds(.02f);
 
     private readonly string currDatabasePath = @"Z:\Projects\UNITY\TypingGame\Assets\#Scripts\Databases\english.json";
 
@@ -44,7 +44,7 @@ public class InputManager : MonoBehaviour
     {
         typingField.onValidateInput += ValidateInput;
 
-        typingField.ActivateInputField(); // activate InputField from the start
+        typingField.ActivateInputField();
 
         typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 20);
 
@@ -53,60 +53,62 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
+        #region Backspace
+
         if (Input.GetKeyDown(KeyCode.Backspace) && caretPos != 0)
-        {
             backspaceCoroutine = StartCoroutine(BackspaceCoroutine());
-        }
-        if (Input.GetKeyUp(KeyCode.Backspace) && caretPos != 0)
-        {
+
+        if (Input.GetKeyUp(KeyCode.Backspace))
             StopCoroutine(backspaceCoroutine);
-        }
-        
+
+        #endregion
+
         typingField.caretPosition = caretPos;
     }
 
     private IEnumerator BackspaceCoroutine()
     {
         Backspace();
-
-        yield return new WaitForSeconds(backspaceHoldDelay);
+        yield return backspaceHoldDelay;
 
         while (true)
         {
             Backspace();
-            yield return new WaitForSeconds(backspaceHoldInterval);
+            yield return backspaceHoldInterval;
         }
-    }
 
-    private void Backspace()
-    {
-        if (typingText[caretPos - 1].c != ' ') BackspaceHelper();
-        else
+        void Backspace()
         {
-            for (int i = caretPos - 2; i > 0; i--)
-            {
-                if (typingText[i].c == ' ') break;
+            if (caretPos == 0) return;
 
-                if (typingText[i].check == CharCheck.Incorrect || typingText[i].check == CharCheck.Extra)
+            if (typingText[caretPos - 1].c != ' ') BackspaceHelper();
+            else
+            {
+                for (int i = caretPos - 2; i > 0; i--)
                 {
-                    BackspaceHelper();
-                    break;
+                    if (typingText[i].c == ' ') break;
+
+                    if (typingText[i].check == CharCheck.Incorrect || typingText[i].check == CharCheck.Extra)
+                    {
+                        BackspaceHelper();
+                        break;
+                    }
                 }
             }
-        }
 
-        void BackspaceHelper()
-        {
-            caretPos -= 1;
+            void BackspaceHelper()
+            {
+                caretPos -= 1;
 
-            typingField.MoveLeft(false, false);
+                typingField.MoveLeft(false, false);
 
-            if (typingText[caretPos].check != CharCheck.Extra)
-                ChangeColor(caretPos, defaultColor, CharCheck.Default);
-            else
-                typingText.RemoveAt(caretPos);
+                if (typingText[caretPos].check != CharCheck.Extra)
+                    ChangeColor(caretPos, defaultColor, CharCheck.Default);
+                else
+                    typingText.RemoveAt(caretPos);
 
-            ChangeText();
+                ChangeText();
+            }
         }
     }
 
