@@ -5,6 +5,14 @@ namespace UnityHelper
 {
     #region Structs
 
+    public enum CharCheck
+    {
+        Default,
+        Correct,
+        Incorrect,
+        Extra
+    }
+
     [Serializable]
     public struct ColorfulChar
     {
@@ -12,29 +20,24 @@ namespace UnityHelper
         public string color { get; private set; }
         public string parsed { get; private set; }
 
-        public ColorfulChar(char c, Color color)
+        public CharCheck check { get; private set; }
+
+        public ColorfulChar(char c, Color color, CharCheck check = CharCheck.Default)
         {
             this.c = c;
             this.color = ColorUtility.ToHtmlStringRGBA(color);
+            this.check = check;
 
             parsed = $"<color=#{this.color}>{c}</color>";
         }
 
-        public void ChangeColor(Color color)
+        public void ChangeColor(Color color, CharCheck check = CharCheck.Default)
         {
             this.color = ColorUtility.ToHtmlStringRGBA(color);
+            this.check = check;
 
             parsed = $"<color=#{this.color}>{c}</color>";
         }
-    }
-
-    #endregion
-
-    #region Classes
-
-    public static class RandomHelper
-    {
-        public static GameObject RandomPrefab(this GameObject[] prefabs) => prefabs[UnityEngine.Random.Range(0, prefabs.Length)];
     }
 
     #endregion

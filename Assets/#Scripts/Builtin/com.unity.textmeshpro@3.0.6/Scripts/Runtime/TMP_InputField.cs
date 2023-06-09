@@ -1,5 +1,7 @@
 ﻿//#define TMP_DEBUG_MODE
 
+// changed by IDBB v1
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1915,13 +1917,14 @@ namespace TMPro
             {
                 case KeyCode.Backspace:
                     {
-                        Backspace();
+                        // Backspace();
+                        // MoveLeft(shift, ctrl);
                         return EditState.Continue;
                     }
-
+                    
                 case KeyCode.Delete:
                     {
-                        DeleteKey();
+                        // DeleteKey();
                         return EditState.Continue;
                     }
 
@@ -1963,7 +1966,7 @@ namespace TMPro
                     }
 
                 // Paste
-                case KeyCode.V:
+                /*case KeyCode.V:
                     {
                         if (ctrlOnly)
                         {
@@ -1971,7 +1974,7 @@ namespace TMPro
                             return EditState.Continue;
                         }
                         break;
-                    }
+                    }*/
 
                 // Cut
                 case KeyCode.X:
@@ -2345,7 +2348,7 @@ namespace TMPro
             return spaceLoc;
         }
 
-        private void MoveLeft(bool shift, bool ctrl)
+        public void MoveLeft(bool shift, bool ctrl)
         {
             if (hasSelection && !shift)
             {
