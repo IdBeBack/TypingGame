@@ -118,15 +118,31 @@ public class InputManager : MonoBehaviour
 
         string binary = Convert.ToString(c, 2);
         if (binary == "1001" || binary == "1010") return '\0';
-
-        bool canType = true;
         
         if (c == typingText[caretPos].c) ChangeColor(caretPos, correctColor, CharCheck.Correct);
 
         else
         {
-            if (typingText[caretPos].c != ' ') 
-                ChangeColor(caretPos, incorrectColor, CharCheck.Incorrect);
+            if (typingText[caretPos].c != ' ')
+            {
+                if (c != ' ') ChangeColor(caretPos, incorrectColor, CharCheck.Incorrect);
+                else
+                {
+                    if (typingText[caretPos - 1].c == ' ') return '\0';
+                    else
+                    {
+                        for (int i = caretPos; i < typingText.Count; i++)
+                        {
+                            if (typingText[i].c == ' ')
+                            {
+                                caretPos = i;
+                                break;
+                            }
+                            else ChangeColor(i, incorrectColor, CharCheck.Incorrect);
+                        }
+                    }
+                }
+            }
             else
             {
                 // not more than `maxExtras` extra chars
@@ -141,16 +157,13 @@ public class InputManager : MonoBehaviour
 
                 if (currExtras < maxExtras)
                     typingText.Insert(caretPos, new ColorfulChar(c, extraColor, CharCheck.Extra));
-                else 
-                    canType = false;
+                else
+                    return '\0';
             }
         }
 
-        if (canType)
-        {
-            ChangeText();
-            caretPos += 1;
-        }
+        ChangeText();
+        caretPos += 1;
         return '\0';
     }
 
