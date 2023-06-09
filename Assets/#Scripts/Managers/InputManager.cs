@@ -3,8 +3,8 @@ using System;
 using UnityEngine;
 using System.Linq;
 using UnityHelper;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 
 public class InputManager : MonoBehaviour
 {
@@ -16,7 +16,16 @@ public class InputManager : MonoBehaviour
 
     private int caretPos = 0;
 
+    private Coroutine backspaceCoroutine;
+
+    #region Readonly
+
     private readonly int maxExtras = 20;
+
+    private readonly float backspaceHoldDelay = .4f;
+    private readonly float backspaceHoldInterval = .02f;
+
+    private readonly string currDatabasePath = @"Z:\Projects\UNITY\TypingGame\Assets\#Scripts\Databases\english.json";
 
     #region Colors
 
@@ -29,13 +38,16 @@ public class InputManager : MonoBehaviour
 
     #endregion
 
+    #endregion
+
     private void Start()
     {
         typingField.onValidateInput += ValidateInput;
 
         typingField.ActivateInputField(); // activate InputField from the start
 
-        typingText = GenerateText();
+        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 20);
+
         ChangeText();
     }
 
@@ -43,43 +55,65 @@ public class InputManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Backspace) && caretPos != 0)
         {
-            if (typingText[caretPos - 1].c != ' ') Backspace();
+            backspaceCoroutine = StartCoroutine(BackspaceCoroutine());
+        }
+        if (Input.GetKeyUp(KeyCode.Backspace) && caretPos != 0)
+        {
+            StopCoroutine(backspaceCoroutine);
+        }
+        
+        typingField.caretPosition = caretPos;
+    }
 
-            else
+    private IEnumerator BackspaceCoroutine()
+    {
+        Backspace();
+
+        yield return new WaitForSeconds(backspaceHoldDelay);
+
+        while (true)
+        {
+            Backspace();
+            yield return new WaitForSeconds(backspaceHoldInterval);
+        }
+    }
+
+    private void Backspace()
+    {
+        if (typingText[caretPos - 1].c != ' ') BackspaceHelper();
+        else
+        {
+            for (int i = caretPos - 2; i > 0; i--)
             {
-                for (int i = caretPos - 2; i > 0; i--)
-                {
-                    if (typingText[i].c == ' ') break;
+                if (typingText[i].c == ' ') break;
 
-                    if (typingText[i].check == CharCheck.Incorrect || typingText[i].check == CharCheck.Extra)
-                    {
-                        Backspace();
-                        break;
-                    }
+                if (typingText[i].check == CharCheck.Incorrect || typingText[i].check == CharCheck.Extra)
+                {
+                    BackspaceHelper();
+                    break;
                 }
             }
-
-            void Backspace()
-            {
-                caretPos -= 1;
-
-                typingField.MoveLeft(false, false);
-
-                print($"{typingText[caretPos].c}; {typingText[caretPos].check}");
-
-                if (typingText[caretPos].check != CharCheck.Extra)
-                    ChangeColor(caretPos, defaultColor, CharCheck.Default);
-                else
-                    typingText.RemoveAt(caretPos);
-
-                ChangeText();
-            }
         }
-        else typingField.caretPosition = caretPos;
+
+        void BackspaceHelper()
+        {
+            caretPos -= 1;
+
+            typingField.MoveLeft(false, false);
+
+            if (typingText[caretPos].check != CharCheck.Extra)
+                ChangeColor(caretPos, defaultColor, CharCheck.Default);
+            else
+                typingText.RemoveAt(caretPos);
+
+            ChangeText();
+        }
     }
 
     private char ValidateInput(string text, int index, char c)
     {
+        if (caretPos == typingText.Count) return '\0';
+
         string binary = Convert.ToString(c, 2);
         if (binary == "1001" || binary == "1010") return '\0';
 
@@ -118,14 +152,7 @@ public class InputManager : MonoBehaviour
         return '\0';
     }
 
-    private List<ColorfulChar> GenerateText()
-    {
-        string text = "dog cat house car book table chair computer phone tree flower river city country friend family school student teacher job work music art movie food drink water coffee time year day night morning evening week month year world life love heart mind body child man woman boy girl people friend family team game sport player team home road street park beach mountain sky sun moon star cloud rain snow ice wind fire earth planet space ocean sea lake river food drink water apple banana orange pizza hamburger sandwich salad coffee tea juice water milk soda beer wine tea coffee time year day night morning evening week month year world life love heart mind body child man woman boy girl people";
-
-        return text.Select(w => new ColorfulChar(w, defaultColor)).ToList();
-    }
-
-    private void ChangeText() => typingField.text = String.Join("", typingText.Select(w => w.parsed));
+    private void ChangeText() => typingField.text = String.Concat(typingText.Select(w => w.parsed));
 
     private void ChangeColor(int position, Color color, CharCheck check = CharCheck.Default)
     {
