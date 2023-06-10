@@ -21,6 +21,7 @@ public class InputManager : MonoBehaviour
     #region Readonly
 
     private readonly int maxExtras = 20;
+    private readonly int numberOfVisibleLines = 3;
 
     private readonly WaitForSeconds backspaceHoldDelay = new WaitForSeconds(.4f);
     private readonly WaitForSeconds backspaceHoldInterval = new WaitForSeconds(.02f);
@@ -40,18 +41,44 @@ public class InputManager : MonoBehaviour
 
     #endregion
 
+    private void Awake()
+    {
+        float rectOffset = .5f * (Screen.height - GetLineHeight() * numberOfVisibleLines);
+
+        SetTopBottomRects(typingField.GetComponent<RectTransform>(), rectOffset, rectOffset);
+
+        #region Methods
+
+        float GetLineHeight()
+        {
+            TMP_Text textComponent = typingField.textComponent;
+
+            textComponent.text = "A";
+
+            return textComponent.GetPreferredValues().y + textComponent.lineSpacing * textComponent.fontSize * .01f;
+        }
+
+        void SetTopBottomRects(RectTransform rt, float top, float bottom)
+        {
+            rt.offsetMax = new Vector2(rt.offsetMax.x, -top);
+            rt.offsetMin = new Vector2(rt.offsetMin.x, bottom);
+        }
+
+        #endregion
+    }
+
     private void Start()
     {
         typingField.onValidateInput += ValidateInput;
 
         typingField.ActivateInputField();
 
-        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 20);
+        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 30);
 
         ChangeText();
     }
 
-    private void Update()
+    private void Update()   
     {
         #region Backspace
 
@@ -64,6 +91,9 @@ public class InputManager : MonoBehaviour
         #endregion
 
         typingField.caretPosition = caretPos;
+
+
+        // print(Screen.height);
     }
 
     private IEnumerator BackspaceCoroutine()

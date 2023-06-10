@@ -2195,7 +2195,7 @@ namespace TMPro
         /// <param name="eventData"></param>
         public virtual void OnScroll(PointerEventData eventData)
         {
-            // Return if Single Line
+            /*// Return if Single Line
             if (m_LineType == LineType.SingleLine)
             {
                 if (m_IScrollHandlerParent != null)
@@ -2223,7 +2223,7 @@ namespace TMPro
                 m_VerticalScrollbar.value = m_ScrollPosition;
             }
 
-            //Debug.Log(GetInstanceID() + "- Scroll Position:" + m_ScrollPosition);
+            //Debug.Log(GetInstanceID() + "- Scroll Position:" + m_ScrollPosition);*/
         }
 
         float GetScrollPositionRelativeToViewport()
