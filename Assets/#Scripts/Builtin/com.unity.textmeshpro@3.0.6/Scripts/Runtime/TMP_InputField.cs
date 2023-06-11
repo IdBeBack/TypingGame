@@ -33,7 +33,7 @@ namespace TMPro
         IScrollHandler
     {
         [HideInInspector] public float lineHeight;
-        [HideInInspector] public int numberOfVisibleLines;
+        [HideInInspector] public int visibleLines;
 
 
         // Setting the content type acts as a shortcut for setting a combination of InputType, CharacterValidation, LineType, and TouchScreenKeyboardType
@@ -3871,8 +3871,8 @@ namespace TMPro
 
             if (m_LineType != LineType.SingleLine)
             {
-                int deleteLine = Mathf.CeilToInt(numberOfVisibleLines / 2f - 1f);
-                int typingLine = (numberOfVisibleLines != 2) ? numberOfVisibleLines - deleteLine : 1;
+                int deleteLine = Mathf.CeilToInt(visibleLines / 2f - 1f);
+                int typingLine = (visibleLines != 2) ? visibleLines - deleteLine : 1;
 
                 float appLineHeight = lineHeight * .9f;
                 float appTopOffset = appLineHeight * .1f + (viewportWSRect.yMax - (caretPosition.y + height));

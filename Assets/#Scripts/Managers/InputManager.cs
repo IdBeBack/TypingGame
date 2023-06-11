@@ -10,15 +10,24 @@ public class InputManager : MonoBehaviour
 {
     #region Fields
 
+    private List<ColorfulChar> typingText;
+
     [SerializeField] private TMP_InputField typingField;
 
-    [SerializeField] private int numberOfVisibleLines = 5;
+    [SerializeField] private int visibleLines;
+    private int prevVisibleLines;
 
-    private List<ColorfulChar> typingText;
+    [SerializeField] private int wordsCount;
+
+    private RectTransform typingFieldRect;
 
     private Coroutine backspaceCoroutine;
 
-    private int caretPos = 0;
+    private int caretPos; // caret position that is changed
+
+    private int prevSceenHeight;
+
+    private float lineHeight;
 
     #region Readonly
 
@@ -27,7 +36,7 @@ public class InputManager : MonoBehaviour
     private readonly WaitForSeconds backspaceHoldDelay = new WaitForSeconds(.4f);
     private readonly WaitForSeconds backspaceHoldInterval = new WaitForSeconds(.02f);
 
-    private readonly string currDatabasePath = @"Z:\Projects\UNITY\TypingGame\Assets\#Scripts\Databases\english.json";
+    private readonly string currDatabasePath = @"Z:\Projects\UNITY\TypingGame\Assets\Databases\Languages\english.json";
 
     #region Colors
 
@@ -44,16 +53,12 @@ public class InputManager : MonoBehaviour
 
     private void Awake()
     {
-        float lineHeight = GetLineHeight();
-
+        lineHeight = GetLineHeight();
         typingField.lineHeight = lineHeight;
-        typingField.numberOfVisibleLines = numberOfVisibleLines;
 
-        float rectOffset = .5f * (Screen.height - lineHeight * numberOfVisibleLines);
+        typingFieldRect = typingField.GetComponent<RectTransform>();
 
-        SetTopBottomRects(typingField.GetComponent<RectTransform>(), rectOffset, rectOffset);
-
-        #region Methods
+        AlignTypingField();
 
         float GetLineHeight()
         {
@@ -63,14 +68,6 @@ public class InputManager : MonoBehaviour
 
             return textComponent.GetPreferredValues().y + textComponent.lineSpacing * textComponent.fontSize * .01f;
         }
-
-        void SetTopBottomRects(RectTransform rt, float top, float bottom)
-        {
-            rt.offsetMax = new Vector2(rt.offsetMax.x, -top);
-            rt.offsetMin = new Vector2(rt.offsetMin.x, bottom);
-        }
-
-        #endregion
     }
 
     private void Start()
@@ -79,13 +76,19 @@ public class InputManager : MonoBehaviour
 
         typingField.ActivateInputField();
 
-        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 100);
+        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, wordsCount);
 
         ChangeText();
     }
 
     private void Update()
     {
+        #region Caret
+
+        typingField.caretPosition = caretPos;
+
+        #endregion
+
         #region Backspace
 
         if (Input.GetKeyDown(KeyCode.Backspace) && caretPos != 0)
@@ -96,10 +99,25 @@ public class InputManager : MonoBehaviour
 
         #endregion
 
-        typingField.caretPosition = caretPos;
+        #region Screen
 
+        if (prevSceenHeight != Screen.height || visibleLines != prevVisibleLines) 
+            AlignTypingField();
 
-        // print(Screen.height);
+        #endregion
+    }
+
+    private void AlignTypingField()
+    {
+        prevVisibleLines = visibleLines;
+        typingField.visibleLines = visibleLines;
+
+        prevSceenHeight = Screen.height;
+
+        float rectOffset = .5f * (prevSceenHeight - lineHeight * visibleLines);
+
+        typingFieldRect.offsetMax = new Vector2(typingFieldRect.offsetMax.x, -rectOffset);
+        typingFieldRect.offsetMin = new Vector2(typingFieldRect.offsetMin.x, rectOffset);
     }
 
     private IEnumerator BackspaceCoroutine()
@@ -203,7 +221,10 @@ public class InputManager : MonoBehaviour
         return '\0';
     }
 
-    private void ChangeText() => typingField.text = String.Concat(typingText.Select(w => w.parsed));
+    private void ChangeText()
+    {
+        typingField.text = String.Concat(typingText.Select(w => w.parsed));
+    }
 
     private void ChangeColor(int position, Color color, CharCheck check = CharCheck.Default)
     {
