@@ -12,16 +12,17 @@ public class InputManager : MonoBehaviour
 
     [SerializeField] private TMP_InputField typingField;
 
+    [SerializeField] private int numberOfVisibleLines = 5;
+
     private List<ColorfulChar> typingText;
 
-    private int caretPos = 0;
-
     private Coroutine backspaceCoroutine;
+
+    private int caretPos = 0;
 
     #region Readonly
 
     private readonly int maxExtras = 20;
-    private readonly int numberOfVisibleLines = 3;
 
     private readonly WaitForSeconds backspaceHoldDelay = new WaitForSeconds(.4f);
     private readonly WaitForSeconds backspaceHoldInterval = new WaitForSeconds(.02f);
@@ -43,7 +44,12 @@ public class InputManager : MonoBehaviour
 
     private void Awake()
     {
-        float rectOffset = .5f * (Screen.height - GetLineHeight() * numberOfVisibleLines);
+        float lineHeight = GetLineHeight();
+
+        typingField.lineHeight = lineHeight;
+        typingField.numberOfVisibleLines = numberOfVisibleLines;
+
+        float rectOffset = .5f * (Screen.height - lineHeight * numberOfVisibleLines);
 
         SetTopBottomRects(typingField.GetComponent<RectTransform>(), rectOffset, rectOffset);
 
@@ -73,12 +79,12 @@ public class InputManager : MonoBehaviour
 
         typingField.ActivateInputField();
 
-        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 30);
+        typingText = TextManager.GenerateText(currDatabasePath, defaultColor, 100);
 
         ChangeText();
     }
 
-    private void Update()   
+    private void Update()
     {
         #region Backspace
 
@@ -148,7 +154,7 @@ public class InputManager : MonoBehaviour
 
         string binary = Convert.ToString(c, 2);
         if (binary == "1001" || binary == "1010") return '\0';
-        
+
         if (c == typingText[caretPos].c) ChangeColor(caretPos, correctColor, CharCheck.Correct);
 
         else
@@ -163,7 +169,7 @@ public class InputManager : MonoBehaviour
                     {
                         for (int i = caretPos; i < typingText.Count; i++)
                         {
-                            if (typingText[i].c == ' ')
+                            if (typingText[i].c == ' ' || i == typingText.Count - 1)
                             {
                                 caretPos = i;
                                 break;
