@@ -37,7 +37,7 @@ namespace TMPro
 
 
         // Setting the content type acts as a shortcut for setting a combination of InputType, CharacterValidation, LineType, and TouchScreenKeyboardType
-        public enum ContentType 
+        public enum ContentType
         {
             Standard,
             Autocorrected,
