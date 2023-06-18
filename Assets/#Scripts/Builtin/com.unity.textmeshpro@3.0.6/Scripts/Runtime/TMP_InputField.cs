@@ -1,7 +1,5 @@
 ﻿//#define TMP_DEBUG_MODE
 
-// changed by IDBB
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,9 +30,6 @@ namespace TMPro
         ILayoutElement,
         IScrollHandler
     {
-        [HideInInspector] public float lineHeight;
-        [HideInInspector] public int visibleLines;
-
 
         // Setting the content type acts as a shortcut for setting a combination of InputType, CharacterValidation, LineType, and TouchScreenKeyboardType
         public enum ContentType
@@ -535,7 +530,6 @@ namespace TMPro
         /// </summary>
         public void SetTextWithoutNotify(string input)
         {
-            print("SetTextWithoutNotify");
             SetText(input, false);
         }
 
@@ -1333,8 +1327,6 @@ namespace TMPro
         /// <param name="shift"></param>
         public void MoveToStartOfLine(bool shift, bool ctrl)
         {
-            print("MoveToStartOfLine");
-
             // Get the line the caret is currently located on.
             int currentLine = m_TextComponent.textInfo.characterInfo[caretPositionInternal].lineNumber;
 
@@ -1923,25 +1915,25 @@ namespace TMPro
             {
                 case KeyCode.Backspace:
                     {
-                        // Backspace();
+                        Backspace();
                         return EditState.Continue;
                     }
 
                 case KeyCode.Delete:
                     {
-                        // DeleteKey();
+                        DeleteKey();
                         return EditState.Continue;
                     }
 
                 case KeyCode.Home:
                     {
-                        // MoveToStartOfLine(shift, ctrl);
+                        MoveToStartOfLine(shift, ctrl);
                         return EditState.Continue;
                     }
 
                 case KeyCode.End:
                     {
-                        // MoveToEndOfLine(shift, ctrl);
+                        MoveToEndOfLine(shift, ctrl);
                         return EditState.Continue;
                     }
 
@@ -1950,7 +1942,7 @@ namespace TMPro
                     {
                         if (ctrlOnly)
                         {
-                            // SelectAll();
+                            SelectAll();
                             return EditState.Continue;
                         }
                         break;
@@ -1971,7 +1963,7 @@ namespace TMPro
                     }
 
                 // Paste
-                /*case KeyCode.V:
+                case KeyCode.V:
                     {
                         if (ctrlOnly)
                         {
@@ -1979,10 +1971,10 @@ namespace TMPro
                             return EditState.Continue;
                         }
                         break;
-                    }*/
+                    }
 
                 // Cut
-                /*case KeyCode.X:
+                case KeyCode.X:
                     {
                         if (ctrlOnly)
                         {
@@ -1996,41 +1988,41 @@ namespace TMPro
                             return EditState.Continue;
                         }
                         break;
-                    }*/
+                    }
 
                 case KeyCode.LeftArrow:
                     {
-                        // MoveLeft(shift, ctrl);
+                        MoveLeft(shift, ctrl);
                         return EditState.Continue;
                     }
 
                 case KeyCode.RightArrow:
                     {
-                        // MoveRight(shift, ctrl);
+                        MoveRight(shift, ctrl);
                         return EditState.Continue;
                     }
 
                 case KeyCode.UpArrow:
                     {
-                        // MoveUp(shift);
+                        MoveUp(shift);
                         return EditState.Continue;
                     }
 
                 case KeyCode.DownArrow:
                     {
-                        // MoveDown(shift);
+                        MoveDown(shift);
                         return EditState.Continue;
                     }
 
                 case KeyCode.PageUp:
                     {
-                        // MovePageUp(shift);
+                        MovePageUp(shift);
                         return EditState.Continue;
                     }
 
                 case KeyCode.PageDown:
                     {
-                        // MovePageDown(shift);
+                        MovePageDown(shift);
                         return EditState.Continue;
                     }
 
@@ -2046,12 +2038,12 @@ namespace TMPro
                         break;
                     }
 
-                    /*case KeyCode.Escape:
-                        {
-                            m_ReleaseSelection = true;
-                            m_WasCanceled = true;
-                            return EditState.Finish;
-                        }*/
+                case KeyCode.Escape:
+                    {
+                        m_ReleaseSelection = true;
+                        m_WasCanceled = true;
+                        return EditState.Finish;
+                    }
             }
 
             char c = evt.character;
@@ -2201,7 +2193,7 @@ namespace TMPro
         /// <param name="eventData"></param>
         public virtual void OnScroll(PointerEventData eventData)
         {
-            /*// Return if Single Line
+            // Return if Single Line
             if (m_LineType == LineType.SingleLine)
             {
                 if (m_IScrollHandlerParent != null)
@@ -2229,7 +2221,7 @@ namespace TMPro
                 m_VerticalScrollbar.value = m_ScrollPosition;
             }
 
-            //Debug.Log(GetInstanceID() + "- Scroll Position:" + m_ScrollPosition);*/
+            //Debug.Log(GetInstanceID() + "- Scroll Position:" + m_ScrollPosition);
         }
 
         float GetScrollPositionRelativeToViewport()
@@ -2353,7 +2345,7 @@ namespace TMPro
             return spaceLoc;
         }
 
-        public void MoveLeft(bool shift, bool ctrl)
+        private void MoveLeft(bool shift, bool ctrl)
         {
             if (hasSelection && !shift)
             {
@@ -3866,37 +3858,28 @@ namespace TMPro
             }
 
             // Adjust text area up or down if not in single line mode.
-
-            #region Autoscroll Behaviour (changed by IDBB)
-
             if (m_LineType != LineType.SingleLine)
             {
-                int deleteLine = Mathf.CeilToInt(visibleLines / 2f - 1f);
-                int typingLine = (visibleLines != 2) ? visibleLines - deleteLine : 1;
-
-                float appLineHeight = lineHeight * .9f;
-                float appTopOffset = appLineHeight * .1f + (viewportWSRect.yMax - (caretPosition.y + height));
-
-                if (appTopOffset < appLineHeight * deleteLine && textComponent.rectTransform.anchoredPosition.y >= lineHeight)
+                float topOffset = viewportWSRect.yMax - (caretPosition.y + height);
+                if (topOffset < -0.0001f)
                 {
-                    // scroll down when backspacing
-                    m_TextComponent.rectTransform.anchoredPosition -= new Vector2(0, lineHeight);
+                    //Debug.Log("Shifting text to Up " + topOffset.ToString("f3"));
+                    m_TextComponent.rectTransform.anchoredPosition += new Vector2(0, topOffset);
                     AssignPositioningIfNeeded();
                 }
 
-                if (appTopOffset > appLineHeight * typingLine)
+                float bottomOffset = caretPosition.y - viewportWSRect.yMin;
+                if (bottomOffset < 0f)
                 {
-                    // scroll up new line is entered
-                    m_TextComponent.rectTransform.anchoredPosition += new Vector2(0, lineHeight);
+                    //Debug.Log("Shifting text to Down " + bottomOffset.ToString("f3"));
+                    m_TextComponent.rectTransform.anchoredPosition -= new Vector2(0, bottomOffset);
                     AssignPositioningIfNeeded();
                 }
             }
 
-            #endregion
-
             // Special handling of backspace
             if (m_isLastKeyBackspace)
-            {   
+            {
                 float anchoredPositionX = m_TextComponent.rectTransform.anchoredPosition.x;
 
                 float firstCharPosition = localPosition.x + textViewportLocalPosition.x + textComponentLocalPosition.x + m_TextComponent.textInfo.characterInfo[0].origin - m_TextComponent.margin.x;
