@@ -5,17 +5,17 @@ using System.Collections.Generic;
 
 namespace TMPro
 {
-    [RequireComponent(typeof(UnityEngine.UI.Image))]
     [AddComponentMenu("TypingField", 1)]
 
-    public class TypingField : Selectable
+    public class TypingField : MonoBehaviour
     {
-        #region Fields
+        #region Members
 
-        [Header("Components")]
+        #region Serialized
+
+        [Header("Text")]
         [SerializeField] private GameObject textComponentsHolder;
-
-        #region TypingField Settings
+        [SerializeField] private TMP_Text textComponentPrefab;
 
         [Header("Typing Field Settings")]
 
@@ -34,24 +34,65 @@ namespace TMPro
 
         #region Private
 
-        private UnityEngine.UI.Image _caretImage;
-        private TMP_TextInfo _textInfo;
-
         private List<TMP_Text> _textComponents = new();
 
-        private float _lineHeight;
+        private Image _caretImage;
+        private TMP_Text _textComponent;
 
-        private int _textComponentIndex = 0;
+        private float _textComponentLineHeight;
 
         private int _caretPosition;
 
+        private int m_textComponentIndex;
+
+        #region Readonly
+
+        private readonly int _textComponentLineCount = 3;
+
         #endregion
+
+        #endregion
+
+        #region Properties
 
         private string text
         {
-            get => _textComponents[_textComponentIndex].text;
-            set => SetText(value);
+            get => _textComponent.text;
+            set
+            {
+                if (value == null)
+                    value = "";
+
+                value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
+
+                _caretPosition = value.Length;
+
+                if (value.Length == 0)
+                    value = "\u200B";
+
+                _textComponent.text = value;
+
+                AlignCaret();
+            }
         }
+
+        private int textComponentIndex
+        {
+            get => m_textComponentIndex;
+            set
+            {
+                while (_textComponents.Count <= value)
+                {
+                    TMP_Text newTextComponent = Instantiate(textComponentPrefab, textComponentsHolder.transform);
+                    _textComponents.Add(newTextComponent);
+                }
+
+                m_textComponentIndex = value;
+                _textComponent = _textComponents[value];
+            }
+        }
+
+        #endregion
 
         #region Coroutines
 
@@ -61,29 +102,27 @@ namespace TMPro
 
         #endregion
 
-        private new void Awake()
+        #region Unity Messages
+
+        private void Awake()
         {
-            foreach (Transform child in textComponentsHolder.transform)
-                _textComponents.Add(child.GetComponent<TMP_Text>());
-
             _caretImage = caret.gameObject.GetComponent<UnityEngine.UI.Image>();
-            _textInfo = _textComponents[_textComponentIndex].textInfo;
 
-            #region Text Height
+            #region Set TextComponent
 
-            TMP_Text textComponent = _textComponents[0];
-            _lineHeight = textComponent.GetPreferredValues().y + textComponent.lineSpacing * textComponent.fontSize * .01f;
+            textComponentPrefab.font = fontAsset;
+            textComponentPrefab.fontSize = pointSize;
 
-            float newHeight = _lineHeight * 3f;
-            _textComponents[_textComponentIndex].rectTransform.sizeDelta = new Vector2(_textComponents[0].rectTransform.sizeDelta.x, newHeight);
+            _textComponentLineHeight = textComponentPrefab.GetPreferredValues().y + textComponentPrefab.lineSpacing * textComponentPrefab.fontSize * .01f;
+
+            textComponentPrefab.rectTransform.sizeDelta = new Vector2(textComponentPrefab.rectTransform.sizeDelta.x, _textComponentLineHeight * _textComponentLineCount);
 
             #endregion
         }
 
-        private new void Start()
+        private void Start()
         {
-            _textComponents[_textComponentIndex].font = fontAsset;
-            _textComponents[_textComponentIndex].fontSize = pointSize;
+            textComponentIndex = 0; // instantiate textComponent
 
             caret.sizeDelta = new Vector2(caretWidth, caretHeight);
             _caretImage.color = caretColor;
@@ -99,32 +138,7 @@ namespace TMPro
                 CheckEventType(evt);
         }
 
-        private void CheckEventType(Event evt)
-        {
-            switch (evt.type)
-            {
-                case EventType.KeyDown:
-                    KeyDownEvent(evt);
-                    break;
-            }
-        }
-
-        private void SetText(string value)
-        {
-            if (value == null)
-                value = "";
-
-            value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
-
-            _caretPosition = value.Length;
-
-            if (value.Length == 0)
-                value = "\u200B";
-
-            _textComponents[_textComponentIndex].text = value;
-
-            AlignCaret();
-        }
+        #endregion
 
         #region Caret
 
@@ -136,27 +150,27 @@ namespace TMPro
             {
                 CaretBlink();
 
-                yield return null;
+                yield return null; // wait for textComponent to set correctly
 
-                _textComponents[_textComponentIndex].ForceMeshUpdate(); // avoid IndexOutOfRangeException when typing quickly
+                _textComponent.ForceMeshUpdate(); // avoid IndexOutOfRangeException when typing quickly
 
                 TMP_CharacterInfo currentCharacter;
                 float caretX;
 
                 if (_caretPosition == 0)
                 {
-                    currentCharacter = _textComponents[_textComponentIndex].textInfo.characterInfo[_caretPosition];
+                    currentCharacter = _textComponent.textInfo.characterInfo[_caretPosition];
                     caretX = currentCharacter.origin;
                 }
                 else
                 {
-                    currentCharacter = _textComponents[_textComponentIndex].textInfo.characterInfo[_caretPosition - 1];
+                    currentCharacter = _textComponent.textInfo.characterInfo[_caretPosition - 1];
                     caretX = currentCharacter.xAdvance;
                 }
 
                 float caretY = (currentCharacter.ascender + currentCharacter.descender) * .5f;
 
-                caret.position = _textComponents[_textComponentIndex].transform.TransformPoint(new(caretX, caretY));
+                caret.position = _textComponent.transform.TransformPoint(new(caretX, caretY));
             }
         }
 
@@ -195,6 +209,18 @@ namespace TMPro
 
         #endregion
 
+        #region Event
+
+        private void CheckEventType(Event evt)
+        {
+            switch (evt.type)
+            {
+                case EventType.KeyDown:
+                    KeyDownEvent(evt);
+                    break;
+            }
+        }
+
         #region KeyDown
 
         private void KeyDownEvent(Event evt)
@@ -227,5 +253,7 @@ namespace TMPro
         }
 
         #endregion  
+
+        #endregion
     }
 }
