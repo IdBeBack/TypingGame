@@ -61,7 +61,7 @@ namespace TMPro
             set
             {
                 if (value == null)
-                    value = "";
+                    value = string.Empty;
 
                 value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
 
@@ -81,6 +81,8 @@ namespace TMPro
             get => m_textComponentIndex;
             set
             {
+                if (value < 0) return;
+
                 while (_textComponents.Count <= value)
                 {
                     TMP_Text newTextComponent = Instantiate(textComponentPrefab, textComponentsHolder.transform);
@@ -89,6 +91,9 @@ namespace TMPro
 
                 m_textComponentIndex = value;
                 _textComponent = _textComponents[value];
+
+                _caretPosition = (text == "\u200B") ? 0 : text.Length;
+                AlignCaret();
             }
         }
 
@@ -126,8 +131,6 @@ namespace TMPro
 
             caret.sizeDelta = new Vector2(caretWidth, caretHeight);
             _caretImage.color = caretColor;
-
-            text = null; // initialize zero-width space and call AlignCaret
         }
 
         private void OnGUI()
@@ -136,6 +139,15 @@ namespace TMPro
 
             if (evt != null)
                 CheckEventType(evt);
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+                textComponentIndex += 1;
+
+            else if (Input.GetKeyDown(KeyCode.LeftArrow))
+                textComponentIndex -= 1;
         }
 
         #endregion
