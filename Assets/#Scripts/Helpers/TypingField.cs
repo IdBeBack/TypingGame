@@ -47,7 +47,15 @@ namespace TMPro
 
         #region Readonly
 
-        private readonly int _textComponentLineCount = 3;
+        private readonly int _textComponentLineCount = 2;
+
+        #endregion
+
+        #region Coroutines
+
+        private Coroutine _caretBlinkCoroutine;
+        private Coroutine _setTextCoroutine;
+        private Coroutine _setTextComponentCoroutine;
 
         #endregion
 
@@ -60,19 +68,64 @@ namespace TMPro
             get => _textComponent.text;
             set
             {
-                if (value == null)
-                    value = string.Empty;
+                if (_setTextCoroutine != null)
+                    return;
 
-                value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
+                StartCoroutine(SetTextHelper());
 
-                _caretPosition = value.Length;
+                IEnumerator SetTextHelper()
+                {
+                    _setTextCoroutine = StartCoroutine(SetText());
 
-                if (value.Length == 0)
-                    value = "\u200B";
+                    IEnumerator SetText()
+                    {
+                        if (value == null)
+                            value = string.Empty;
 
-                _textComponent.text = value;
+                        value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
 
-                AlignCaret();
+                        _caretPosition = value.Length;
+
+                        if (value.Length == 0)
+                            value = "\u200B";
+
+                        _textComponent.text = value;
+
+                        _textComponent.ForceMeshUpdate();
+
+                        AlignCaret();
+
+                        if (_textComponent.textInfo.lineCount == _textComponentLineCount + 1)
+                        {
+                            print($"textComponent: {textComponentIndex}; lineCount: {_textComponent.textInfo.lineCount}; text: {_textComponent.text}");
+
+                            if (_textComponent.textInfo.lineCount > _textComponentLineCount + 1)
+                                ;
+
+                            var textComponentT = _textComponent;
+                            var textInfoT = _textComponent.textInfo;
+                            var lineCountT = _textComponent.textInfo.lineCount;
+                            var lineInfoT = _textComponent.textInfo.lineInfo;
+
+
+                            int firstCharacterIndex = _textComponent.textInfo.lineInfo[_textComponentLineCount].firstCharacterIndex;
+
+                            string lastLine = text[firstCharacterIndex..];
+
+                            _textComponent.text = text[..firstCharacterIndex];
+
+                            textComponentIndex += 1;
+
+                            _textComponent.text = lastLine;
+
+                            // print($"textComponent: {textComponentIndex} ; Length: {_textComponent.textInfo.lineInfo.Length}; lastLine: {lastLine}");
+                        }
+
+                        yield break;
+                    }
+
+                    yield break;
+                }
             }
         }
 
@@ -85,23 +138,24 @@ namespace TMPro
 
                 while (_textComponents.Count <= value)
                 {
+                    if (value != 0)
+                        m_textComponentIndex += 1;
+
                     TMP_Text newTextComponent = Instantiate(textComponentPrefab, textComponentsHolder.transform);
+
+                    print($"Instantiated textComponent; lineCount: {newTextComponent.textInfo.lineCount};");
+
+                    newTextComponent.name = $"Text {m_textComponentIndex + 1}";
+
                     _textComponents.Add(newTextComponent);
                 }
 
-                m_textComponentIndex = value;
                 _textComponent = _textComponents[value];
 
                 _caretPosition = (text == "\u200B") ? 0 : text.Length;
                 AlignCaret();
             }
         }
-
-        #endregion
-
-        #region Coroutines
-
-        private Coroutine _caretBlinkCoroutine;
 
         #endregion
 
@@ -141,15 +195,6 @@ namespace TMPro
                 CheckEventType(evt);
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-                textComponentIndex += 1;
-
-            else if (Input.GetKeyDown(KeyCode.LeftArrow))
-                textComponentIndex -= 1;
-        }
-
         #endregion
 
         #region Caret
@@ -163,8 +208,6 @@ namespace TMPro
                 CaretBlink();
 
                 yield return null; // wait for textComponent to set correctly
-
-                _textComponent.ForceMeshUpdate(); // avoid IndexOutOfRangeException when typing quickly
 
                 TMP_CharacterInfo currentCharacter;
                 float caretX;
