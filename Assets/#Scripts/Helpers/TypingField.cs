@@ -40,6 +40,7 @@ namespace TMPro
         private TMP_Text _textComponent;
 
         private float _textComponentLineHeight;
+        private float _textComponentWidth;
 
         private int _caretPosition;
 
@@ -95,9 +96,20 @@ namespace TMPro
 
                         AlignCaret();
 
+                        //
+
+                        TMP_CharacterInfo lastCharacter = _textComponent.textInfo.characterInfo[_textComponent.textInfo.characterCount - 1];
+                        float lastCharacterWidth = lastCharacter.xAdvance - lastCharacter.origin;
+
+                        if (_textComponent.GetRenderedValues().x + lastCharacterWidth > _textComponentWidth)
+                        {
+                            print("I should change textComponent");
+                        }
+
+/*
                         if (_textComponent.textInfo.lineCount == _textComponentLineCount + 1)
                         {
-                            print($"textComponent: {textComponentIndex}; lineCount: {_textComponent.textInfo.lineCount}; text: {_textComponent.text}");
+                            // print($"textComponent: {textComponentIndex}; lineCount: {_textComponent.textInfo.lineCount}; text: {_textComponent.text}");
 
                             if (_textComponent.textInfo.lineCount > _textComponentLineCount + 1)
                                 ;
@@ -120,7 +132,7 @@ namespace TMPro
 
                             // print($"textComponent: {textComponentIndex} ; Length: {_textComponent.textInfo.lineInfo.Length}; lastLine: {lastLine}");
                         }
-
+*/
                         yield break;
                     }
 
@@ -143,7 +155,7 @@ namespace TMPro
 
                     TMP_Text newTextComponent = Instantiate(textComponentPrefab, textComponentsHolder.transform);
 
-                    print($"Instantiated textComponent; lineCount: {newTextComponent.textInfo.lineCount};");
+                    //print($"Instantiated textComponent; lineCount: {newTextComponent.textInfo.lineCount};");
 
                     newTextComponent.name = $"Text {m_textComponentIndex + 1}";
 
@@ -174,6 +186,8 @@ namespace TMPro
 
             _textComponentLineHeight = textComponentPrefab.GetPreferredValues().y + textComponentPrefab.lineSpacing * textComponentPrefab.fontSize * .01f;
 
+            _textComponentWidth = textComponentsHolder.GetComponent<RectTransform>().rect.width;
+
             textComponentPrefab.rectTransform.sizeDelta = new Vector2(textComponentPrefab.rectTransform.sizeDelta.x, _textComponentLineHeight * _textComponentLineCount);
 
             #endregion
@@ -185,6 +199,8 @@ namespace TMPro
 
             caret.sizeDelta = new Vector2(caretWidth, caretHeight);
             _caretImage.color = caretColor;
+
+            print(_textComponentWidth);
         }
 
         private void OnGUI()
@@ -193,6 +209,17 @@ namespace TMPro
 
             if (evt != null)
                 CheckEventType(evt);
+        }
+
+        private void Update()
+        {
+            int lastCharacterIndex = _textComponent.textInfo.characterCount - 1;
+
+            float lastCharacterWidth = _textComponent.textInfo.characterInfo[lastCharacterIndex].xAdvance - _textComponent.textInfo.characterInfo[lastCharacterIndex].origin;
+
+            //print($"{_textComponent.GetRenderedValues()}; lineHeight: {_textComponentLineHeight}");
+
+            print($"renderedValues: {_textComponent.GetRenderedValues()}; _textComponentWidth: {_textComponentWidth}; lastCharacterWidth: {lastCharacterWidth}; currectWidth: {_textComponent.GetRenderedValues().x + lastCharacterWidth}");
         }
 
         #endregion
