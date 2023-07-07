@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 namespace TMPro
 {
@@ -14,8 +15,11 @@ namespace TMPro
         #region Serialized
 
         [Header("Text")]
+
+        [Space(3f)]
         [SerializeField] private GameObject textComponentsHolder;
         [SerializeField] private TMP_Text textComponentPrefab;
+        [SerializeField] private int textComponentLineCount;
 
         [Header("Typing Field Settings")]
 
@@ -39,18 +43,15 @@ namespace TMPro
         private Image _caretImage;
         private TMP_Text _textComponent;
 
-        private float _textComponentLineHeight;
-        private float _textComponentWidth;
-
         private int _caretPosition;
+        private int _textComponentCurrLine;
+
+        private float _textComponentLineHeight;
+        private float _textComponentMaxWidth;
+
+        private Vector2 _textComponentPrevValues;
 
         private int m_textComponentIndex;
-
-        #region Readonly
-
-        private readonly int _textComponentLineCount = 2;
-
-        #endregion
 
         #region Coroutines
 
@@ -67,106 +68,13 @@ namespace TMPro
         private string text
         {
             get => _textComponent.text;
-            set
-            {
-                if (_setTextCoroutine != null)
-                    return;
-
-                StartCoroutine(SetTextHelper());
-
-                IEnumerator SetTextHelper()
-                {
-                    _setTextCoroutine = StartCoroutine(SetText());
-
-                    IEnumerator SetText()
-                    {
-                        if (value == null)
-                            value = string.Empty;
-
-                        value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
-
-                        _caretPosition = value.Length;
-
-                        if (value.Length == 0)
-                            value = "\u200B";
-
-                        _textComponent.text = value;
-
-                        _textComponent.ForceMeshUpdate();
-
-                        AlignCaret();
-
-                        //
-
-                        TMP_CharacterInfo lastCharacter = _textComponent.textInfo.characterInfo[_textComponent.textInfo.characterCount - 1];
-                        float lastCharacterWidth = lastCharacter.xAdvance - lastCharacter.origin;
-
-                        if (_textComponent.GetRenderedValues().x + lastCharacterWidth > _textComponentWidth)
-                        {
-                            print("I should change textComponent");
-                        }
-
-/*
-                        if (_textComponent.textInfo.lineCount == _textComponentLineCount + 1)
-                        {
-                            // print($"textComponent: {textComponentIndex}; lineCount: {_textComponent.textInfo.lineCount}; text: {_textComponent.text}");
-
-                            if (_textComponent.textInfo.lineCount > _textComponentLineCount + 1)
-                                ;
-
-                            var textComponentT = _textComponent;
-                            var textInfoT = _textComponent.textInfo;
-                            var lineCountT = _textComponent.textInfo.lineCount;
-                            var lineInfoT = _textComponent.textInfo.lineInfo;
-
-
-                            int firstCharacterIndex = _textComponent.textInfo.lineInfo[_textComponentLineCount].firstCharacterIndex;
-
-                            string lastLine = text[firstCharacterIndex..];
-
-                            _textComponent.text = text[..firstCharacterIndex];
-
-                            textComponentIndex += 1;
-
-                            _textComponent.text = lastLine;
-
-                            // print($"textComponent: {textComponentIndex} ; Length: {_textComponent.textInfo.lineInfo.Length}; lastLine: {lastLine}");
-                        }
-*/
-                        yield break;
-                    }
-
-                    yield break;
-                }
-            }
+            set => SetText(value);
         }
 
         private int textComponentIndex
         {
             get => m_textComponentIndex;
-            set
-            {
-                if (value < 0) return;
-
-                while (_textComponents.Count <= value)
-                {
-                    if (value != 0)
-                        m_textComponentIndex += 1;
-
-                    TMP_Text newTextComponent = Instantiate(textComponentPrefab, textComponentsHolder.transform);
-
-                    //print($"Instantiated textComponent; lineCount: {newTextComponent.textInfo.lineCount};");
-
-                    newTextComponent.name = $"Text {m_textComponentIndex + 1}";
-
-                    _textComponents.Add(newTextComponent);
-                }
-
-                _textComponent = _textComponents[value];
-
-                _caretPosition = (text == "\u200B") ? 0 : text.Length;
-                AlignCaret();
-            }
+            set => SetTextComponentIndex(value);
         }
 
         #endregion
@@ -186,9 +94,9 @@ namespace TMPro
 
             _textComponentLineHeight = textComponentPrefab.GetPreferredValues().y + textComponentPrefab.lineSpacing * textComponentPrefab.fontSize * .01f;
 
-            _textComponentWidth = textComponentsHolder.GetComponent<RectTransform>().rect.width;
+            _textComponentMaxWidth = textComponentsHolder.GetComponent<RectTransform>().rect.width;
 
-            textComponentPrefab.rectTransform.sizeDelta = new Vector2(textComponentPrefab.rectTransform.sizeDelta.x, _textComponentLineHeight * _textComponentLineCount);
+            textComponentPrefab.rectTransform.sizeDelta = new Vector2(textComponentPrefab.rectTransform.sizeDelta.x, _textComponentLineHeight * textComponentLineCount);
 
             #endregion
         }
@@ -199,8 +107,6 @@ namespace TMPro
 
             caret.sizeDelta = new Vector2(caretWidth, caretHeight);
             _caretImage.color = caretColor;
-
-            print(_textComponentWidth);
         }
 
         private void OnGUI()
@@ -211,15 +117,100 @@ namespace TMPro
                 CheckEventType(evt);
         }
 
-        private void Update()
+        #endregion
+
+        #region Setters
+
+        private void SetText(string value, bool sendCallback = true)
         {
-            int lastCharacterIndex = _textComponent.textInfo.characterCount - 1;
+            #region Parse Text
 
-            float lastCharacterWidth = _textComponent.textInfo.characterInfo[lastCharacterIndex].xAdvance - _textComponent.textInfo.characterInfo[lastCharacterIndex].origin;
+            if (_setTextCoroutine != null)
+                return;
 
-            //print($"{_textComponent.GetRenderedValues()}; lineHeight: {_textComponentLineHeight}");
+            if (value == null)
+                value = string.Empty;
 
-            print($"renderedValues: {_textComponent.GetRenderedValues()}; _textComponentWidth: {_textComponentWidth}; lastCharacterWidth: {lastCharacterWidth}; currectWidth: {_textComponent.GetRenderedValues().x + lastCharacterWidth}");
+            value = value.Replace("\0", string.Empty).Replace("\u200B", string.Empty);
+
+            _caretPosition = value.Length;
+
+            if (value.Length == 0)
+                value = "\u200B";
+
+            _textComponent.text = value;
+
+            #endregion
+
+            if (!sendCallback) 
+                return;
+
+            #region Change TextComponent
+
+            _textComponent.ForceMeshUpdate();
+
+            Vector2 _textComponentCurrValues = _textComponent.GetRenderedValues();
+
+            if (_textComponentCurrValues.y > _textComponentPrevValues.y)
+            {
+                int lastCharacterIndex = text.Length - 1;
+                float lastCharacterWidth = _textComponent.textInfo.characterInfo[lastCharacterIndex].xAdvance - _textComponent.textInfo.characterInfo[lastCharacterIndex].origin;
+
+                if (text.Length >= 2 && _textComponent.textInfo.characterInfo[lastCharacterIndex - 1].character == ' ')
+                    lastCharacterWidth *= 2; // ' ' isn't counted in renderedValues
+
+                if (_textComponentCurrLine >= textComponentLineCount && _textComponentPrevValues.x + lastCharacterWidth > _textComponentMaxWidth)
+                {
+                    _textComponentCurrLine = 0; // reset to zero, it gonna be changed to 1 then
+                    _textComponentCurrValues = default; // reset to zero
+
+                    int firstCharacterIndex = _textComponent.textInfo.lineInfo[textComponentLineCount].firstCharacterIndex;
+
+                    string lastLine = text[firstCharacterIndex..];
+
+                    SetText(text[..firstCharacterIndex], false);
+
+                    textComponentIndex += 1;
+
+                    SetText(lastLine); // now new textComponent already, execute AlignCaret() too
+                }
+                else
+                    _textComponentCurrLine += 1;
+            }
+            else if (_textComponentCurrValues.y < _textComponentPrevValues.y)
+            {
+                if (_textComponentCurrLine > 0) // shouldn't be negative
+                    _textComponentCurrLine -= 1;
+            }
+
+            _textComponentPrevValues = _textComponentCurrValues; // assign after manipulations
+
+            AlignCaret();
+
+            #endregion
+        }
+
+        private void SetTextComponentIndex(int value)
+        {
+            if (value < 0) return;
+
+            while (_textComponents.Count <= value)
+            {
+                if (value != 0)
+                    m_textComponentIndex += 1;
+
+                TMP_Text newTextComponent = Instantiate(textComponentPrefab, textComponentsHolder.transform);
+
+                newTextComponent.name = $"Text {m_textComponentIndex + 1}";
+
+                _textComponents.Add(newTextComponent);
+            }
+
+            _textComponent = _textComponents[value];
+
+            _caretPosition = (text == "\u200B") ? 0 : text.Length;
+
+            AlignCaret();
         }
 
         #endregion
@@ -232,21 +223,23 @@ namespace TMPro
 
             IEnumerator AlignCaretCoroutine()
             {
+                yield return null; // wait for textComponent to set correctly
+
                 CaretBlink();
 
-                yield return null; // wait for textComponent to set correctly
+                TMP_CharacterInfo[] characterInfo = _textComponent.textInfo.characterInfo;
 
                 TMP_CharacterInfo currentCharacter;
                 float caretX;
 
                 if (_caretPosition == 0)
                 {
-                    currentCharacter = _textComponent.textInfo.characterInfo[_caretPosition];
+                    currentCharacter = characterInfo[_caretPosition];
                     caretX = currentCharacter.origin;
                 }
                 else
                 {
-                    currentCharacter = _textComponent.textInfo.characterInfo[_caretPosition - 1];
+                    currentCharacter = characterInfo[_caretPosition - 1];
                     caretX = currentCharacter.xAdvance;
                 }
 
