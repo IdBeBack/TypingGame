@@ -56,8 +56,6 @@ namespace TMPro
         #region Coroutines
 
         private Coroutine _caretBlinkCoroutine;
-        private Coroutine _setTextCoroutine;
-        private Coroutine _setTextComponentCoroutine;
 
         #endregion
 
@@ -68,7 +66,7 @@ namespace TMPro
         private string text
         {
             get => _textComponent.text;
-            set => SetText(value);
+            set => SetText(value, true);
         }
 
         private int textComponentIndex
@@ -85,7 +83,7 @@ namespace TMPro
 
         private void Awake()
         {
-            _caretImage = caret.gameObject.GetComponent<UnityEngine.UI.Image>();
+            _caretImage = caret.gameObject.GetComponent<Image>();
 
             #region Set TextComponent
 
@@ -121,12 +119,9 @@ namespace TMPro
 
         #region Setters
 
-        private void SetText(string value, bool sendCallback = true)
+        private void SetText(string value, bool updateExternally)
         {
             #region Parse Text
-
-            if (_setTextCoroutine != null)
-                return;
 
             if (value == null)
                 value = string.Empty;
@@ -142,26 +137,31 @@ namespace TMPro
 
             #endregion
 
-            if (!sendCallback) 
+            if (!updateExternally) 
                 return;
 
             #region Change TextComponent
 
             _textComponent.ForceMeshUpdate();
 
+            if (_textComponentCurrLine < 1) 
+                _textComponentCurrLine = 1;
+
             Vector2 _textComponentCurrValues = _textComponent.GetRenderedValues();
 
-            if (_textComponentCurrValues.y > _textComponentPrevValues.y)
+            int lastCharacterIndex = text.Length - 1;
+            float lastCharacterWidth = _textComponent.textInfo.characterInfo[lastCharacterIndex].xAdvance - _textComponent.textInfo.characterInfo[lastCharacterIndex].origin;
+
+            if (text.Length >= 2 && _textComponent.textInfo.characterInfo[lastCharacterIndex - 1].character == ' ')
+                lastCharacterWidth *= 2; // ' ' isn't counted in renderedValues
+
+            //print($"textComponent: {textComponentIndex + 1}; character: \"{value[^1]}\"; _textComponentCurrLine: {_textComponentCurrLine}; _textComponentCurrValues: {_textComponentCurrValues}; _textComponentPrevValues: {_textComponentPrevValues}");
+
+            if (_textComponentCurrValues.y > _textComponentPrevValues.y && _textComponentPrevValues.x + lastCharacterWidth > _textComponentMaxWidth)
             {
-                int lastCharacterIndex = text.Length - 1;
-                float lastCharacterWidth = _textComponent.textInfo.characterInfo[lastCharacterIndex].xAdvance - _textComponent.textInfo.characterInfo[lastCharacterIndex].origin;
-
-                if (text.Length >= 2 && _textComponent.textInfo.characterInfo[lastCharacterIndex - 1].character == ' ')
-                    lastCharacterWidth *= 2; // ' ' isn't counted in renderedValues
-
-                if (_textComponentCurrLine >= textComponentLineCount && _textComponentPrevValues.x + lastCharacterWidth > _textComponentMaxWidth)
+                if (_textComponentCurrLine == textComponentLineCount)
                 {
-                    _textComponentCurrLine = 0; // reset to zero, it gonna be changed to 1 then
+                    _textComponentCurrLine = 1;
                     _textComponentCurrValues = default; // reset to zero
 
                     int firstCharacterIndex = _textComponent.textInfo.lineInfo[textComponentLineCount].firstCharacterIndex;
@@ -172,7 +172,11 @@ namespace TMPro
 
                     textComponentIndex += 1;
 
-                    SetText(lastLine); // now new textComponent already, execute AlignCaret() too
+                    SetText(lastLine, false);
+
+                    _textComponent.ForceMeshUpdate(); // for AlignCaret() to not throw errors
+
+                    //print($"textComponent added; _textComponentCurrValues: {_textComponentCurrValues}; _textComponentPrevValues: {_textComponentPrevValues}");
                 }
                 else
                     _textComponentCurrLine += 1;
@@ -183,7 +187,7 @@ namespace TMPro
                     _textComponentCurrLine -= 1;
             }
 
-            _textComponentPrevValues = _textComponentCurrValues; // assign after manipulations
+            _textComponentPrevValues = _textComponentCurrValues; // assign to zero after manipulations
 
             AlignCaret();
 
@@ -219,34 +223,27 @@ namespace TMPro
 
         private void AlignCaret()
         {
-            StartCoroutine(AlignCaretCoroutine());
+            CaretBlink();
 
-            IEnumerator AlignCaretCoroutine()
+            TMP_CharacterInfo[] characterInfo = _textComponent.textInfo.characterInfo;
+
+            TMP_CharacterInfo currentCharacter;
+            float caretX;
+
+            if (_caretPosition == 0)
             {
-                yield return null; // wait for textComponent to set correctly
-
-                CaretBlink();
-
-                TMP_CharacterInfo[] characterInfo = _textComponent.textInfo.characterInfo;
-
-                TMP_CharacterInfo currentCharacter;
-                float caretX;
-
-                if (_caretPosition == 0)
-                {
-                    currentCharacter = characterInfo[_caretPosition];
-                    caretX = currentCharacter.origin;
-                }
-                else
-                {
-                    currentCharacter = characterInfo[_caretPosition - 1];
-                    caretX = currentCharacter.xAdvance;
-                }
-
-                float caretY = (currentCharacter.ascender + currentCharacter.descender) * .5f;
-
-                caret.position = _textComponent.transform.TransformPoint(new(caretX, caretY));
+                currentCharacter = characterInfo[_caretPosition];
+                caretX = currentCharacter.origin;
             }
+            else
+            {
+                currentCharacter = characterInfo[_caretPosition - 1];
+                caretX = currentCharacter.xAdvance;
+            }
+
+            float caretY = (currentCharacter.ascender + currentCharacter.descender) * .5f;
+
+            caret.position = _textComponent.transform.TransformPoint(new(caretX, caretY));
         }
 
         private void CaretBlink()

@@ -1010,7 +1010,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textComponentsHolder: {fileID: 2120966013}
   textComponentPrefab: {fileID: 7367495243196540546, guid: cd222b4cf9e7e044ba4f4685ca4e9921, type: 3}
-  textComponentLineCount: 2
+  textComponentLineCount: 1
   fontAsset: {fileID: 11400000, guid: 12b72f2efaee3cf4d8a15f0fb0e5a0fb, type: 2}
   pointSize: 31
   caret: {fileID: 2110359514}
