@@ -79,7 +79,7 @@ namespace TMPro
 
         #endregion
 
-        #region Unity Messages
+        #region Fields Assignment
 
         private void Awake()
         {
@@ -105,14 +105,6 @@ namespace TMPro
 
             caret.sizeDelta = new Vector2(caretWidth, caretHeight);
             _caretImage.color = caretColor;
-        }
-
-        private void OnGUI()
-        {
-            Event evt = Event.current;
-
-            if (evt != null)
-                CheckEventType(evt);
         }
 
         #endregion
@@ -155,7 +147,7 @@ namespace TMPro
             if (text.Length >= 2 && _textComponent.textInfo.characterInfo[lastCharacterIndex - 1].character == ' ')
                 lastCharacterWidth *= 2; // ' ' isn't counted in renderedValues
 
-            //print($"textComponent: {textComponentIndex + 1}; character: \"{value[^1]}\"; _textComponentCurrLine: {_textComponentCurrLine}; _textComponentCurrValues: {_textComponentCurrValues}; _textComponentPrevValues: {_textComponentPrevValues}");
+            // print($"textComponent: {textComponentIndex + 1}; character: \"{value[^1]}\"; _textComponentCurrLine: {_textComponentCurrLine}; _textComponentCurrValues: {_textComponentCurrValues}; _textComponentPrevValues: {_textComponentPrevValues}");
 
             if (_textComponentCurrValues.y > _textComponentPrevValues.y && _textComponentPrevValues.x + lastCharacterWidth > _textComponentMaxWidth)
             {
@@ -176,7 +168,7 @@ namespace TMPro
 
                     _textComponent.ForceMeshUpdate(); // for AlignCaret() to not throw errors
 
-                    //print($"textComponent added; _textComponentCurrValues: {_textComponentCurrValues}; _textComponentPrevValues: {_textComponentPrevValues}");
+                    // print($"textComponent added; _textComponentCurrValues: {_textComponentCurrValues}; _textComponentPrevValues: {_textComponentPrevValues}");
                 }
                 else
                     _textComponentCurrLine += 1;
@@ -281,7 +273,15 @@ namespace TMPro
 
         #endregion
 
-        #region Event
+        #region Check User's Input
+
+        private void OnGUI()
+        {
+            Event evt = Event.current;
+
+            if (evt != null)
+                CheckEventType(evt);
+        }
 
         private void CheckEventType(Event evt)
         {
